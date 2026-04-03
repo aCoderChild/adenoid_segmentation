@@ -88,9 +88,13 @@ class MedSAM(nn.Module):
 def main():
     # --- DEBUG: Print trainable parameters (should be LoRA only) ---
     print("Trainable parameters (should be LoRA only):")
+    found_trainable = False
     for name, param in medsam_model.image_encoder.named_parameters():
         if param.requires_grad:
             print(name, param.shape)
+            found_trainable = True
+    if not found_trainable:
+        print("[WARNING] No trainable LoRA parameters found! Check LoRA application and freezing logic.")
     # Load config
     with open("external/MedSAM/config/finetune.yaml", "r") as f:
         config = yaml.safe_load(f)
@@ -169,6 +173,7 @@ def main():
         prompt_encoder=sam_model.prompt_encoder,
     ).to(device)
     medsam_model.train()
+
 
     # --- DEBUG: Print trainable parameters (should be LoRA only) ---
     print("Trainable parameters (should be LoRA only):")
