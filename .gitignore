@@ -1,0 +1,4 @@
+
+# Ignore WTNet and PraNet
+external/WTNet/
+external/PraNet/
