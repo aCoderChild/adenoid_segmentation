@@ -1,0 +1,37 @@
+{
+  "os": "macOS-15.7.6-arm64-arm-64bit-Mach-O",
+  "python": "CPython 3.13.9",
+  "startedAt": "2026-04-02T22:07:17.442628Z",
+  "program": "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py",
+  "codePath": "external/MedSAM/MedSAM_finetune_encoder.py",
+  "codePathLocal": "external/MedSAM/MedSAM_finetune_encoder.py",
+  "git": {
+    "remote": "https://github.com/aCoderChild/adenoid_segmentation.git",
+    "commit": "b2fb041d8b51c286271ea66c26ebd61e59c6a3a0"
+  },
+  "email": "phammaianh11102005@gmail.com",
+  "root": "/Users/maianhpham/Documents/adenoid_segmentation",
+  "host": "Mais-MacBook-Pro.local",
+  "executable": "/opt/miniconda3/bin/python",
+  "cpu_count": 12,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "494384795648",
+      "used": "236705325056"
+    }
+  },
+  "memory": {
+    "total": "25769803776"
+  },
+  "apple": {
+    "name": "Apple M4 Pro",
+    "ecpuCores": 4,
+    "pcpuCores": 8,
+    "gpuCores": 16,
+    "memoryGb": 24,
+    "swapTotalBytes": "3221225472",
+    "ramTotalBytes": "25769803776"
+  },
+  "writerId": "pzqm5ryas9lcx14scyzw3zl0djgv3fa9"
+}

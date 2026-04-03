@@ -28,9 +28,9 @@ def copy_files(list_path, img_dst, bbox_dst, annotated_dst, mask_dst):
         for line in f:
             base = os.path.splitext(os.path.basename(line.strip()))[0]
             img_file = os.path.join(IMG_SRC, base + '.jpg')
-            bbox_file = os.path.join(BBOX_SRC, base + '.txt')
+            bbox_file = os.path.join(BBOX_SRC, base + '.csv')
             annotated_file = os.path.join(ANNOTATED_SRC, base + '.jpg')
-            mask_file = os.path.join(MASK_SRC, base + '.png')
+            mask_file = os.path.join(MASK_SRC, base + '.jpg')
             if os.path.exists(img_file):
                 shutil.copy(img_file, img_dst)
             if os.path.exists(bbox_file):

@@ -10,6 +10,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YOLOv26 Training Script")
     parser.add_argument('--data_yaml', type=str, required=True, help='Path to your YOLO-format data.yaml')
     parser.add_argument('--model_cfg', type=str, required=True, help='Pretrained YOLOv26 checkpoint (.pt)')
+    parser.add_argument('--results_dir', type=str, required=True, help='Directory to save results and checkpoints')
     args = parser.parse_args()
 
     DATA_YAML = args.data_yaml

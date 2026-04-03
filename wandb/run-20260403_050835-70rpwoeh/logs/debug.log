@@ -1,0 +1,21 @@
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_setup.py:_flush():80] Current SDK version is 0.23.1
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_setup.py:_flush():80] Configure stats pid to 63821
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_setup.py:_flush():80] Loading settings from /Users/maianhpham/.config/wandb/settings
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_setup.py:_flush():80] Loading settings from /Users/maianhpham/Documents/adenoid_segmentation/wandb/settings
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_setup.py:_flush():80] Loading settings from environment variables
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_init.py:setup_run_log_directory():714] Logging user logs to /Users/maianhpham/Documents/adenoid_segmentation/wandb/run-20260403_050835-70rpwoeh/logs/debug.log
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_init.py:setup_run_log_directory():715] Logging internal logs to /Users/maianhpham/Documents/adenoid_segmentation/wandb/run-20260403_050835-70rpwoeh/logs/debug-internal.log
+2026-04-03 05:08:35,478 INFO    MainThread:63821 [wandb_init.py:init():841] calling init triggers
+2026-04-03 05:08:35,479 INFO    MainThread:63821 [wandb_init.py:init():846] wandb.init called with sweep_config: {}
+config: {'train_data_path': 'data/segmentation/train_data', 'model_type': 'vit_b', 'checkpoint': 'external/MedSAM/work_dir/MedSAM/medsam_vit_b.pth', 'work_dir': 'external/MedSAM/work_dir/MedSAM', 'num_epochs': 10, 'batch_size': 2, 'num_workers': 4, 'lr': 0.0001, 'weight_decay': 0.01, 'use_lora': True, 'lora_r': 8, 'lora_alpha': 16, 'lora_dropout': 0.1, 'device': 'mps', '_wandb': {}}
+2026-04-03 05:08:35,479 INFO    MainThread:63821 [wandb_init.py:init():889] starting backend
+2026-04-03 05:08:35,753 INFO    MainThread:63821 [wandb_init.py:init():892] sending inform_init request
+2026-04-03 05:08:35,778 INFO    MainThread:63821 [wandb_init.py:init():900] backend started and connected
+2026-04-03 05:08:35,781 INFO    MainThread:63821 [wandb_init.py:init():970] updated telemetry
+2026-04-03 05:08:35,802 INFO    MainThread:63821 [wandb_init.py:init():994] communicating run to backend with 90.0 second timeout
+2026-04-03 05:08:36,519 INFO    MainThread:63821 [wandb_init.py:init():1041] starting run threads in backend
+2026-04-03 05:08:36,665 INFO    MainThread:63821 [wandb_run.py:_console_start():2521] atexit reg
+2026-04-03 05:08:36,665 INFO    MainThread:63821 [wandb_run.py:_redirect():2369] redirect: wrap_raw
+2026-04-03 05:08:36,666 INFO    MainThread:63821 [wandb_run.py:_redirect():2438] Wrapping output streams.
+2026-04-03 05:08:36,666 INFO    MainThread:63821 [wandb_run.py:_redirect():2461] Redirects installed.
+2026-04-03 05:08:36,668 INFO    MainThread:63821 [wandb_init.py:init():1081] run started, returning control to user process

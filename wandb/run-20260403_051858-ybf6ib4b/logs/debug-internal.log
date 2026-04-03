@@ -1,0 +1,9 @@
+{"time":"2026-04-03T05:18:58.463748+07:00","level":"INFO","msg":"stream: starting","core version":"0.23.1"}
+{"time":"2026-04-03T05:18:58.87381+07:00","level":"INFO","msg":"stream: created new stream","id":"ybf6ib4b"}
+{"time":"2026-04-03T05:18:58.875296+07:00","level":"INFO","msg":"writer: started","stream_id":"ybf6ib4b"}
+{"time":"2026-04-03T05:18:58.876474+07:00","level":"INFO","msg":"sender: started","stream_id":"ybf6ib4b"}
+{"time":"2026-04-03T05:18:58.876525+07:00","level":"INFO","msg":"handler: started","stream_id":"ybf6ib4b"}
+{"time":"2026-04-03T05:18:58.876586+07:00","level":"INFO","msg":"stream: started","id":"ybf6ib4b"}
+{"time":"2026-04-03T05:33:33.226627+07:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/adenoid-hypertrophy/MedSAM_finetune_encoder/ybf6ib4b/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2026-04-03T05:33:35.483968+07:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/adenoid-hypertrophy/MedSAM_finetune_encoder/ybf6ib4b/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2026-04-03T05:33:40.28721+07:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/adenoid-hypertrophy/MedSAM_finetune_encoder/ybf6ib4b/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}

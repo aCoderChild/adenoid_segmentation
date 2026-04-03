@@ -1,0 +1,76 @@
+_wandb:
+    value:
+        cli_version: 0.25.1
+        e:
+            sunoyqnrevbz8n8i4bgqxd2mtxuizxjv:
+                codePath: external/MedSAM/MedSAM_finetune_encoder.py
+                codePathLocal: external/MedSAM/MedSAM_finetune_encoder.py
+                email: phammaianh11102005@gmail.com
+                executable: /Users/maianhpham/Documents/adenoid_segmentation/.venv/bin/python
+                git:
+                    commit: b2fb041d8b51c286271ea66c26ebd61e59c6a3a0
+                    remote: https://github.com/aCoderChild/adenoid_segmentation.git
+                host: Mais-MacBook-Pro.local
+                os: macOS-15.7.6-arm64-arm-64bit-Mach-O
+                program: /Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py
+                python: CPython 3.14.3
+                root: /Users/maianhpham/Documents/adenoid_segmentation
+                startedAt: "2026-04-02T03:43:51.469634Z"
+                writerId: sunoyqnrevbz8n8i4bgqxd2mtxuizxjv
+        m: []
+        python_version: 3.14.3
+        t:
+            "1":
+                - 1
+                - 11
+                - 41
+                - 48
+                - 49
+                - 71
+                - 98
+            "2":
+                - 1
+                - 11
+                - 41
+                - 48
+                - 49
+                - 71
+                - 98
+            "3":
+                - 13
+                - 16
+            "4": 3.14.3
+            "5": 0.25.1
+            "6": 5.4.0
+            "8":
+                - 2
+            "12": 0.25.1
+            "13": darwin-arm64
+batch_size:
+    value: 2
+checkpoint:
+    value: external/MedSAM/work_dir/MedSAM/medsam_vit_b.pth
+device:
+    value: mps
+lora_alpha:
+    value: 16
+lora_dropout:
+    value: 0.1
+lora_r:
+    value: 8
+lr:
+    value: 0.0001
+model_type:
+    value: vit_b
+num_epochs:
+    value: 50
+num_workers:
+    value: 4
+train_data_path:
+    value: data/segmentation/train_data
+use_lora:
+    value: true
+weight_decay:
+    value: 0.01
+work_dir:
+    value: external/MedSAM/work_dir/MedSAM

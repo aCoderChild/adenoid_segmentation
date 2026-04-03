@@ -1,0 +1,29 @@
+Using MPS device.
+LoRA applied to MedSAM ViT encoder (qkv, proj)
+Found 880 image/mask pairs.
+Number of training samples:  880
+  0%|                                                                  | 0/440 [00:00<?, ?it/s]/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/utils/data/dataloader.py:1118: UserWarning: 'pin_memory' argument is set as true but not supported on MPS now, device pinned memory won't be used.
+  super().__init__(loader)
+  0%|                                                                  | 0/440 [00:18<?, ?it/s]
+Traceback (most recent call last):
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 213, in <module>
+    main()
+    ~~~~^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 187, in main
+    medsam_pred = medsam_model(image, boxes_np)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 65, in forward
+    image_embedding = self.image_encoder(image)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 112, in forward
+    x = x + self.pos_embed
+        ~~^~~~~~~~~~~~~~~~
+RuntimeError: The size of tensor a (16) must match the size of tensor b (64) at non-singleton dimension 2

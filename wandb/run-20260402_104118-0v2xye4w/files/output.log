@@ -1,0 +1,30 @@
+Using MPS device.
+Traceback (most recent call last):
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 205, in <module>
+    main()
+    ~~~~^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 131, in main
+    sam_model.image_encoder = get_peft_model(sam_model.image_encoder, lora_config)
+                              ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/mapping_func.py", line 122, in get_peft_model
+    return MODEL_TYPE_TO_PEFT_MODEL_MAPPING[peft_config.task_type](
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model,
+        ^^^^^^
+    ...<3 lines>...
+        low_cpu_mem_usage=low_cpu_mem_usage,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/peft_model.py", line 2966, in __init__
+    super().__init__(model, peft_config, adapter_name, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/peft_model.py", line 129, in __init__
+    self.base_model = cls(model, {adapter_name: peft_config}, adapter_name)
+                      ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/tuners/tuners_utils.py", line 298, in __init__
+    self.inject_adapter(self.model, adapter_name, low_cpu_mem_usage=low_cpu_mem_usage, state_dict=state_dict)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/tuners/tuners_utils.py", line 880, in inject_adapter
+    raise ValueError(error_msg)
+ValueError: Target modules {'image_encoder', 'mask_decoder'} not found in the base model. Please check the target modules and try again.

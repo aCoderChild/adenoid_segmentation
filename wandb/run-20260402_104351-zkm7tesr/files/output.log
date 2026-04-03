@@ -1,0 +1,55 @@
+Using MPS device.
+Traceback (most recent call last):
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 216, in <module>
+    main()
+    ~~~~^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 133, in main
+    sam_model.image_encoder = get_peft_model(sam_model.image_encoder, lora_config)
+                              ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/mapping_func.py", line 122, in get_peft_model
+    return MODEL_TYPE_TO_PEFT_MODEL_MAPPING[peft_config.task_type](
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        model,
+        ^^^^^^
+    ...<3 lines>...
+        low_cpu_mem_usage=low_cpu_mem_usage,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/peft_model.py", line 2966, in __init__
+    super().__init__(model, peft_config, adapter_name, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/peft_model.py", line 129, in __init__
+    self.base_model = cls(model, {adapter_name: peft_config}, adapter_name)
+                      ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/tuners/tuners_utils.py", line 298, in __init__
+    self.inject_adapter(self.model, adapter_name, low_cpu_mem_usage=low_cpu_mem_usage, state_dict=state_dict)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/tuners/tuners_utils.py", line 804, in inject_adapter
+    self._create_and_replace(
+    ~~~~~~~~~~~~~~~~~~~~~~~~^
+        peft_config, adapter_name, target, target_name, parent, current_key=key
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/tuners/lora/model.py", line 250, in _create_and_replace
+    new_module = self._create_new_module(lora_config, adapter_name, target, device_map=device_map, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/peft/tuners/lora/model.py", line 343, in _create_new_module
+    raise ValueError(
+    ...<3 lines>...
+    )
+ValueError: Target module ModuleList(
+  (0-11): 12 x Block(
+    (norm1): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+    (attn): Attention(
+      (qkv): Linear(in_features=768, out_features=2304, bias=True)
+      (proj): Linear(in_features=768, out_features=768, bias=True)
+    )
+    (norm2): LayerNorm((768,), eps=1e-06, elementwise_affine=True)
+    (mlp): MLPBlock(
+      (lin1): Linear(in_features=768, out_features=3072, bias=True)
+      (lin2): Linear(in_features=3072, out_features=768, bias=True)
+      (act): GELU(approximate='none')
+    )
+  )
+) is not supported. Currently, only the following modules are supported: `torch.nn.Linear`, `torch.nn.Embedding`, `torch.nn.Conv1d`, `torch.nn.Conv2d`, `torch.nn.Conv3d`, `transformers.pytorch_utils.Conv1D`, `torch.nn.MultiheadAttention.`.

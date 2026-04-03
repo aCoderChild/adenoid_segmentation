@@ -1,0 +1,73 @@
+Using MPS device.
+LoRA applied to MedSAM ViT encoder (qkv, proj)
+Found 880 image/mask pairs.
+Number of training samples:  880
+  0%|                                                            | 0/440 [00:00<?, ?it/s]/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/utils/data/dataloader.py:1118: UserWarning: 'pin_memory' argument is set as true but not supported on MPS now, device pinned memory won't be used.
+  super().__init__(loader)
+100%|██████████████████████████████████████████████████| 440/440 [02:24<00:00,  3.03it/s]
+Time: 20260402-1228, Epoch: 0, Loss: 0.7028098255735323, GradNorm: 1.912698010485764, LR: 9.990232305719945e-05
+100%|██████████████████████████████████████████████████| 440/440 [02:25<00:00,  3.02it/s]
+Time: 20260402-1231, Epoch: 1, Loss: 0.31791918636522426, GradNorm: 1.1766711992344057, LR: 9.960967771506666e-05
+100%|████████████████████████████████████████████████| 440/440 [1:35:22<00:00, 13.01s/it]
+Time: 20260402-1410, Epoch: 2, Loss: 0.18910779814174344, GradNorm: 1.183359595239791, LR: 9.912321891107009e-05
+100%|██████████████████████████████████████████████████| 440/440 [02:23<00:00,  3.06it/s]
+Time: 20260402-1412, Epoch: 3, Loss: 0.1442896997161498, GradNorm: 2.838982622914903, LR: 9.844486647586723e-05
+100%|██████████████████████████████████████████████████| 440/440 [02:25<00:00,  3.03it/s]
+Time: 20260402-1415, Epoch: 4, Loss: 0.11224298119748644, GradNorm: 0.39978329978312677, LR: 9.757729755661011e-05
+100%|██████████████████████████████████████████████████| 440/440 [04:00<00:00,  1.83it/s]
+Time: 20260402-1419, Epoch: 5, Loss: 0.09825016856023826, GradNorm: 1.2726029723454044, LR: 9.652393605146844e-05
+100%|██████████████████████████████████████████████████| 440/440 [02:25<00:00,  3.02it/s]
+Time: 20260402-1421, Epoch: 6, Loss: 0.06906661384469556, GradNorm: 0.11707323398241073, LR: 9.528893909706797e-05
+100%|██████████████████████████████████████████████████| 440/440 [02:41<00:00,  2.73it/s]
+Time: 20260402-1424, Epoch: 7, Loss: 0.058895272667390336, GradNorm: 0.19462180866799858, LR: 9.387718066217124e-05
+100%|██████████████████████████████████████████████████| 440/440 [26:51<00:00,  3.66s/it]
+Time: 20260402-1451, Epoch: 8, Loss: 0.046069539722759525, GradNorm: 0.22626605892348356, LR: 9.229423231234974e-05
+100%|██████████████████████████████████████████████████| 440/440 [10:32<00:00,  1.44s/it]
+Time: 20260402-1501, Epoch: 9, Loss: 0.0370004785105009, GradNorm: 0.14452311153128733, LR: 9.054634122155989e-05
+100%|██████████████████████████████████████████████████| 440/440 [07:32<00:00,  1.03s/it]
+Time: 20260402-1509, Epoch: 10, Loss: 0.031153799113149253, GradNorm: 0.14418338903732716, LR: 8.864040551740155e-05
+100%|██████████████████████████████████████████████████| 440/440 [02:39<00:00,  2.76it/s]
+Time: 20260402-1512, Epoch: 11, Loss: 0.028383211012089578, GradNorm: 0.21193768059884038, LR: 8.658394705735986e-05
+ 12%|██████▎                                            | 54/440 [00:39<04:42,  1.37it/s]
+Traceback (most recent call last):
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 243, in <module>
+    main()
+    ~~~~^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 203, in main
+    medsam_pred = medsam_model(image, boxes_np)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 65, in forward
+    image_embedding = self.image_encoder(image)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 124, in forward
+    x = blk(x)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 188, in forward
+    x = self.attn(x)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 250, in forward
+    attn = add_decomposed_rel_pos(
+        attn, q, self.rel_pos_h, self.rel_pos_w, (H, W), (H, W)
+    )
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 382, in add_decomposed_rel_pos
+    Rw = get_rel_pos(q_w, k_w, rel_pos_w)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 324, in get_rel_pos
+    def get_rel_pos(q_size: int, k_size: int, rel_pos: torch.Tensor) -> torch.Tensor:
+
+KeyboardInterrupt

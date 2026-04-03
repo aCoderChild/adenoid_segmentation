@@ -87,7 +87,7 @@ class SamAutomaticMaskGenerator:
           point_grids (list(np.ndarray) or None): A list over explicit grids
             of points used for sampling, normalized to [0,1]. The nth grid in the
             list is used in the nth crop layer. Exclusive with points_per_side.
-          min_mask_region_area (int): If >0, postprocessing will be applied
+          min_mask_region_area (int): If > 0, postprocessing will be applied
             to remove disconnected regions and holes in masks with area smaller
             than min_mask_region_area. Requires opencv.
           output_mode (str): The form masks are returned in. Can be 'binary_mask',
@@ -279,7 +279,7 @@ class SamAutomaticMaskGenerator:
 
         # Run model on this batch
         transformed_points = self.predictor.transform.apply_coords(points, im_size)
-        in_points = torch.as_tensor(transformed_points, device=self.predictor.device)
+        in_points = torch.as_tensor(transformed_points, dtype=torch.float32, device=self.predictor.device)
         in_labels = torch.ones(
             in_points.shape[0], dtype=torch.int, device=in_points.device
         )

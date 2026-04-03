@@ -1,0 +1,33 @@
+Using MPS device.
+Traceback (most recent call last):
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 224, in <module>
+    main()
+    ~~~~^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 141, in main
+    sam_model.image_encoder = apply_lora_to_vit_encoder(sam_model.image_encoder, r, lora_alpha)
+                              ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/utils/lora_medsam.py", line 28, in apply_lora_to_vit_encoder
+    apply_lora_to_vit_encoder(module, r, alpha, target_modules)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/utils/lora_medsam.py", line 28, in apply_lora_to_vit_encoder
+    apply_lora_to_vit_encoder(module, r, alpha, target_modules)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/utils/lora_medsam.py", line 28, in apply_lora_to_vit_encoder
+    apply_lora_to_vit_encoder(module, r, alpha, target_modules)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/utils/lora_medsam.py", line 26, in apply_lora_to_vit_encoder
+    setattr(vit_encoder, name, _LoRALayer(module, r, alpha))
+                               ~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/utils/lora_medsam.py", line 11, in __init__
+    self.lora_A = nn.Linear(linear.in_features, r, bias=False)
+                  ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.13/site-packages/torch/nn/modules/linear.py", line 115, in __init__
+    self.reset_parameters()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "/opt/miniconda3/lib/python3.13/site-packages/torch/nn/modules/linear.py", line 124, in reset_parameters
+    init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/miniconda3/lib/python3.13/site-packages/torch/nn/init.py", line 575, in kaiming_uniform_
+    return tensor.uniform_(-bound, bound, generator=generator)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt

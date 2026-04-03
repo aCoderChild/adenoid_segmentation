@@ -1,0 +1,17 @@
+{"time":"2026-04-02T10:30:37.360298+07:00","level":"INFO","msg":"wandb-core"}
+{"time":"2026-04-02T10:30:37.360945+07:00","level":"INFO","msg":"stream: starting","core version":"0.25.1"}
+{"time":"2026-04-02T10:30:37.947473+07:00","level":"INFO","msg":"stream: created new stream","id":"4s39iyj4"}
+{"time":"2026-04-02T10:30:37.947543+07:00","level":"INFO","msg":"handler: started"}
+{"time":"2026-04-02T10:30:37.947705+07:00","level":"INFO","msg":"stream: started"}
+{"time":"2026-04-02T10:30:37.94776+07:00","level":"INFO","msg":"sender: started"}
+{"time":"2026-04-02T10:30:37.947752+07:00","level":"INFO","msg":"writer: started","stream_id":"4s39iyj4"}
+{"time":"2026-04-02T10:30:38.20635+07:00","level":"ERROR","msg":"api: HTTP error","status":400,"method":"POST","url":"https://api.wandb.ai/graphql"}
+{"time":"2026-04-02T10:30:38.206432+07:00","level":"ERROR","msg":"runupserter: failed to init run","error":"returned error 400: {\"data\":{\"upsertBucket\":null},\"errors\":[{\"message\":\"project projects is a reserved name, please choose a different name\",\"path\":[\"upsertBucket\"]}]}"}
+{"time":"2026-04-02T10:30:38.212116+07:00","level":"INFO","msg":"stream: closing"}
+{"time":"2026-04-02T10:30:38.212473+07:00","level":"ERROR","msg":"sender: uploadConfigFile: runhandle: run not yet initialized"}
+{"time":"2026-04-02T10:30:38.212747+07:00","level":"ERROR","msg":"runfiles: runhandle: run not yet initialized"}
+{"time":"2026-04-02T10:30:38.212947+07:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2026-04-02T10:30:38.212957+07:00","level":"INFO","msg":"handler: closed"}
+{"time":"2026-04-02T10:30:38.212983+07:00","level":"INFO","msg":"sender: closed"}
+{"time":"2026-04-02T10:30:38.212987+07:00","level":"INFO","msg":"stream: closed"}
+{"time":"2026-04-02T10:30:38.218108+07:00","level":"ERROR","msg":"stream: runURL: runhandle: run not yet initialized"}

@@ -9,22 +9,30 @@ from tqdm import tqdm
 import importlib.util
 import cv2
 
-# Paths
-VAL_IMG = '../../data/segmentation/val_data/images'
-VAL_BBOX = '../../external/YOLOv26/results' # This is where your input .txt files live
-VAL_MASK = '../../data/segmentation/val_data/masks'
-CHECKPOINT = 'work_dir/MedSAM/medsam_vit_b.pth'
-RESULTS_DIR = 'results/yolov26'
+# Load config from YAML
+import sys
+import yaml
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config', 'infer.yaml')
+with open(CONFIG_PATH, 'r') as f:
+    config = yaml.safe_load(f)
 
-# --- Define a specific output folder for the converted CSVs ---
-CSV_OUT_DIR = os.path.join(RESULTS_DIR, 'predicted_bbox')
+VAL_IMG = config['VAL_IMG']
+VAL_BBOX = config['VAL_BBOX_YOLO']
+VAL_MASK = config['VAL_MASK']
+CHECKPOINT = config['CHECKPOINT']
+RESULTS_DIR = config['RESULTS_DIR_YOLO']
+CSV_OUT_DIR = os.path.join(RESULTS_DIR, config['CSV_OUT_DIR'])
+VIS_DIR = os.path.join(RESULTS_DIR, config['VIS_SUBDIR'])
+METRICS_DIR = os.path.join(RESULTS_DIR, config['METRICS_SUBDIR'])
+PER_SAMPLE_CSV = os.path.join(METRICS_DIR, config['PER_SAMPLE_CSV'])
+AVG_CSV = os.path.join(METRICS_DIR, config['AVG_CSV'])
 
-VIS_DIR = os.path.join(RESULTS_DIR, 'visualisations')
-METRICS_DIR = os.path.join(RESULTS_DIR, 'metrics')
-PER_SAMPLE_CSV = os.path.join(METRICS_DIR, 'metrics_per_single_sample.csv')
-AVG_CSV = os.path.join(METRICS_DIR, 'metrics_average.csv')
 
-# --- Create the CSV output directory if it doesn't exist ---
+# Load metrics from utils/metrics.py
+METRICS_PATH = os.path.join(os.path.dirname(__file__), 'utils')
+if METRICS_PATH not in sys.path:
+    sys.path.append(METRICS_PATH)
+import utils.metrics as medsam_metrics
 os.makedirs(CSV_OUT_DIR, exist_ok=True)
 os.makedirs(VIS_DIR, exist_ok=True)
 os.makedirs(METRICS_DIR, exist_ok=True)

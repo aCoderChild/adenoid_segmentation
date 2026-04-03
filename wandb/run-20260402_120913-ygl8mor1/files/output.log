@@ -1,0 +1,57 @@
+Using MPS device.
+LoRA applied to MedSAM ViT encoder (qkv, proj)
+Found 880 image/mask pairs.
+Number of training samples:  880
+  0%|                                                   | 0/440 [00:00<?, ?it/s]/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/utils/data/dataloader.py:1118: UserWarning: 'pin_memory' argument is set as true but not supported on MPS now, device pinned memory won't be used.
+  super().__init__(loader)
+100%|█████████████████████████████████████████| 440/440 [02:07<00:00,  3.46it/s]
+Time: 20260402-1211, Epoch: 0, Loss: 0.7030179935734473
+100%|██████████████████████████████████████████████████| 440/440 [02:07<00:00,  3.44it/s]
+Time: 20260402-1213, Epoch: 1, Loss: 0.31533834731931837
+100%|██████████████████████████████████████████████████| 440/440 [02:08<00:00,  3.43it/s]
+Time: 20260402-1215, Epoch: 2, Loss: 0.18996633263410903
+100%|██████████████████████████████████████████████████| 440/440 [02:08<00:00,  3.44it/s]
+Time: 20260402-1217, Epoch: 3, Loss: 0.13830180178504597
+100%|██████████████████████████████████████████████████| 440/440 [02:07<00:00,  3.44it/s]
+Time: 20260402-1220, Epoch: 4, Loss: 0.1272380767912012
+ 38%|███████████████████▏                              | 169/440 [01:06<01:45,  2.56it/s]
+Traceback (most recent call last):
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 224, in <module>
+    main()
+    ~~~~^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 198, in main
+    medsam_pred = medsam_model(image, boxes_np)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py", line 65, in forward
+    image_embedding = self.image_encoder(image)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 124, in forward
+    x = blk(x)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/image_encoder.py", line 194, in forward
+    x = x + self.mlp(self.norm2(x))
+            ~~~~~~~~^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/segment_anything/modeling/common.py", line 27, in forward
+    return self.lin2(self.act(self.lin1(x)))
+                     ~~~~~~~~^^^^^^^^^^^^^^
+  File "/Users/maianhpham/Documents/adenoid_segmentation/.venv/lib/python3.14/site-packages/torch/nn/modules/module.py", line 1775, in _wrapped_call_impl
+    def _wrapped_call_impl(self, *args, **kwargs):
+
+KeyboardInterrupt

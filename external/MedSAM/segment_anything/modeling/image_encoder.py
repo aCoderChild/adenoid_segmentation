@@ -109,7 +109,16 @@ class ImageEncoderViT(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = self.patch_embed(x)
         if self.pos_embed is not None:
-            x = x + self.pos_embed
+            # Interpolate pos_embed to match x's spatial size if needed
+            pe = self.pos_embed
+            if (x.shape[1], x.shape[2]) != (pe.shape[1], pe.shape[2]):
+                pe = torch.nn.functional.interpolate(
+                    pe.permute(0, 3, 1, 2),
+                    size=(x.shape[1], x.shape[2]),
+                    mode="bilinear",
+                    align_corners=False
+                ).permute(0, 2, 3, 1)
+            x = x + pe
 
         for blk in self.blocks:
             x = blk(x)

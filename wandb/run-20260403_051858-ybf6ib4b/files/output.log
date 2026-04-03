@@ -1,0 +1,11 @@
+Using MPS device.
+LoRA applied to MedSAM ViT encoder (qkv, proj)
+Found 880 image/mask pairs.
+Number of training samples:  880
+/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py:206: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = GradScaler(enabled=False if device.type != 'cuda' else True)
+  0%|          | 0/440 [00:00<?, ?it/s]/opt/miniconda3/lib/python3.13/site-packages/torch/utils/data/dataloader.py:1118: UserWarning: 'pin_memory' argument is set as true but not supported on MPS now, device pinned memory won't be used.
+  super().__init__(loader)
+/Users/maianhpham/Documents/adenoid_segmentation/external/MedSAM/MedSAM_finetune_encoder.py:214: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+  with autocast(enabled=(device.type == 'cuda')):
+  0%|          | 1/440 [02:37<19:12:24, 157.50s/it]

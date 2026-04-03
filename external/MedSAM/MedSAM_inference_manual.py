@@ -9,16 +9,21 @@ from tqdm import tqdm
 import importlib.util
 import cv2
 
-# Paths
-VAL_IMG = '../../data/segmentation/val_data/images'
-VAL_BBOX = '../../data/segmentation/val_data/bbox'
-VAL_MASK = '../../data/segmentation/val_data/masks'
-CHECKPOINT = 'work_dir/MedSAM/medsam_vit_b.pth'
-RESULTS_DIR = 'results/manual'
-VIS_DIR = os.path.join(RESULTS_DIR, 'visualisations')
-METRICS_DIR = os.path.join(RESULTS_DIR, 'metrics')
-PER_SAMPLE_CSV = os.path.join(METRICS_DIR, 'metrics_per_single_sample.csv')
-AVG_CSV = os.path.join(METRICS_DIR, 'metrics_average.csv')
+# Load config from YAML
+import yaml
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config', 'infer.yaml')
+with open(CONFIG_PATH, 'r') as f:
+    config = yaml.safe_load(f)
+
+VAL_IMG = config['VAL_IMG']
+VAL_BBOX = config['VAL_BBOX_MANUAL']
+VAL_MASK = config['VAL_MASK']
+CHECKPOINT = config['CHECKPOINT']
+RESULTS_DIR = config['RESULTS_DIR_MANUAL']
+VIS_DIR = os.path.join(RESULTS_DIR, config['VIS_SUBDIR'])
+METRICS_DIR = os.path.join(RESULTS_DIR, config['METRICS_SUBDIR'])
+PER_SAMPLE_CSV = os.path.join(METRICS_DIR, config['PER_SAMPLE_CSV'])
+AVG_CSV = os.path.join(METRICS_DIR, config['AVG_CSV'])
 
 os.makedirs(VIS_DIR, exist_ok=True)
 os.makedirs(METRICS_DIR, exist_ok=True)
@@ -65,11 +70,13 @@ def draw_bbox(img, bbox, color, lw=2):
     img = cv2.rectangle(img, (x0, y0), (x1, y1), color, lw)
     return img
 
-# Load SurfaceDice
-SURFACE_DICE_PATH = 'utils/SurfaceDice.py'
-spec = importlib.util.spec_from_file_location('SurfaceDice', SURFACE_DICE_PATH)
-SurfaceDice = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(SurfaceDice)
+
+# Load metrics from utils/metrics.py
+import sys
+METRICS_PATH = os.path.join(os.path.dirname(__file__), 'utils')
+if METRICS_PATH not in sys.path:
+    sys.path.append(METRICS_PATH)
+import utils.metrics as medsam_metrics
 
 # Main batch inference and evaluation
 def main():
@@ -151,40 +158,52 @@ def main():
         combined_path = os.path.join(VIS_DIR, f'{base}_combined.jpg')
         io.imsave(combined_path, combined)
         print(f"Saved combined visualization: {combined_path}")
-        # Evaluate
-        # Expand mask dimensions for 2D compatibility with SurfaceDice
-        gt_mask_3d = np.expand_dims(gt_mask, axis=0)
-        pred_mask_3d = np.expand_dims(pred_mask, axis=0)
-        # Compute SND (Surface Dice)
-        surface_distances = SurfaceDice.compute_surface_distances(gt_mask_3d, pred_mask_3d, spacing_mm=(1.0, 1.0, 1.0))
-        snd_score = SurfaceDice.compute_surface_dice_at_tolerance(surface_distances, 1)
-        # Compute DICE (Soerensen-Dice coefficient)
-        dice_score = SurfaceDice.compute_dice_coefficient(gt_mask_3d.astype(bool), pred_mask_3d.astype(bool))
-        print(f"Surface Dice (SND) for {img_name}: {snd_score}")
-        print(f"Dice coefficient (DICE) for {img_name}: {dice_score}")
-        results.append({'image': img_name, 'surface_dice': snd_score, 'dice': dice_score})
+        # Evaluate using metrics.py
+        dice_score = medsam_metrics.dice_coefficient(pred_mask, gt_mask)
+        iou = medsam_metrics.iou_score(pred_mask, gt_mask)
+        f1 = medsam_metrics.f_measure(pred_mask, gt_mask)
+        s_measure = medsam_metrics.structure_measure(pred_mask, gt_mask)
+        wfb = medsam_metrics.weighted_f_measure(pred_mask, gt_mask)
+        emeasure = medsam_metrics.enhanced_alignment_measure(pred_mask, gt_mask)
+        mae_val = medsam_metrics.mae(pred_mask, gt_mask)
+        precision, recall, specificity, sensitivity = medsam_metrics.precision_recall_specificity(pred_mask, gt_mask)
+        print(f"Dice: {dice_score:.4f}, IoU: {iou:.4f}, F1: {f1:.4f}, S-measure: {s_measure:.4f}, WFb: {wfb:.4f}, E-measure: {emeasure:.4f}, MAE: {mae_val:.4f}, Precision: {precision:.4f}, Recall: {recall:.4f}, Specificity: {specificity:.4f}, Sensitivity: {sensitivity:.4f}")
+        results.append({
+            'image': img_name,
+            'dice': dice_score,
+            'iou': iou,
+            'f1': f1,
+            's_measure': s_measure,
+            'wfb': wfb,
+            'emeasure': emeasure,
+            'mae': mae_val,
+            'precision': precision,
+            'recall': recall,
+            'specificity': specificity,
+            'sensitivity': sensitivity
+        })
         processed_count += 1
     # Save per-sample metrics
     print(f"Processed {processed_count} images.")
     print(f"Saving per-sample metrics to {PER_SAMPLE_CSV}")
+    metric_fields = ['image', 'dice', 'iou', 'f1', 's_measure', 'wfb', 'emeasure', 'mae', 'precision', 'recall', 'specificity', 'sensitivity']
     with open(PER_SAMPLE_CSV, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=['image', 'surface_dice', 'dice'])
+        writer = csv.DictWriter(csvfile, fieldnames=metric_fields)
         writer.writeheader()
         for row in results:
             writer.writerow(row)
     # Save average metrics
     if results:
-        avg_snd = np.mean([r['surface_dice'] for r in results])
-        avg_dice = np.mean([r['dice'] for r in results])
+        avg_metrics = {k: np.mean([r[k] for r in results]) for k in metric_fields if k != 'image'}
     else:
         print("Warning: No images were processed. Creating empty metrics files.")
-        avg_snd = 0
-        avg_dice = 0
+        avg_metrics = {k: 0 for k in metric_fields if k != 'image'}
     print(f"Saving average metrics to {AVG_CSV}")
     with open(AVG_CSV, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(['average_surface_dice', 'average_dice'])
-        writer.writerow([avg_snd, avg_dice])
+        writer.writerow(['metric', 'average'])
+        for k, v in avg_metrics.items():
+            writer.writerow([k, v])
     print('Done!')
 
 if __name__ == '__main__':

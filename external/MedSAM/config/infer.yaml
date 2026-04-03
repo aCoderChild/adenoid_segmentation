@@ -1,0 +1,19 @@
+# MedSAM configuration file
+# All paths for inference scripts
+
+VAL_IMG: '../../data/segmentation/val_data/images'
+VAL_BBOX_MANUAL: '../../data/segmentation/val_data/bbox/manual'
+VAL_BBOX_YOLO: '../../data/segmentation/val_data/bbox/YOLO'
+VAL_MASK: '../../data/segmentation/val_data/masks'
+CHECKPOINT: 'work_dir/MedSAM/medsam_vit_b.pth'
+# checkpoint for finetuned image encoder
+FINETUNE_CHECKPOINT: 'work_dir/MedSAM/MedSAM-ViT-B-20260403-0328/medsam_model_best.pth'
+
+RESULTS_DIR_MANUAL: 'results/manual'
+RESULTS_DIR_YOLO: 'results/yolo'
+RESULTS_DIR_AUTO: 'results/auto'
+VIS_SUBDIR: 'visualisations'
+METRICS_SUBDIR: 'metrics'
+PER_SAMPLE_CSV: 'metrics_per_single_sample.csv'
+AVG_CSV: 'metrics_average.csv'
+CSV_OUT_DIR: 'predicted_bbox'

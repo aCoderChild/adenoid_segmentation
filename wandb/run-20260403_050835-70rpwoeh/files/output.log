@@ -1,0 +1,7 @@
+Using MPS device.
+LoRA applied to MedSAM ViT encoder (qkv, proj)
+Found 880 image/mask pairs.
+Number of training samples:  880
+  0%|          | 0/440 [00:00<?, ?it/s]/opt/miniconda3/lib/python3.13/site-packages/torch/utils/data/dataloader.py:1118: UserWarning: 'pin_memory' argument is set as true but not supported on MPS now, device pinned memory won't be used.
+  super().__init__(loader)
+  3%|▎         | 15/440 [10:08<3:05:05, 26.13s/it] 
