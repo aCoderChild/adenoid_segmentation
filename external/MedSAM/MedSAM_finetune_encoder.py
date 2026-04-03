@@ -86,6 +86,11 @@ class MedSAM(nn.Module):
         return ori_res_masks
 
 def main():
+    # --- DEBUG: Print trainable parameters (should be LoRA only) ---
+    print("Trainable parameters (should be LoRA only):")
+    for name, param in medsam_model.image_encoder.named_parameters():
+        if param.requires_grad:
+            print(name, param.shape)
     # Load config
     with open("external/MedSAM/config/finetune.yaml", "r") as f:
         config = yaml.safe_load(f)
@@ -226,19 +231,29 @@ def main():
                     loss = seg_loss(medsam_pred, gt2D) + ce_loss(medsam_pred, gt2D.float())
             if device.type == 'cuda':
                 scaler.scale(loss).backward()
+            else:
+                loss.backward()
+
+            # --- DEBUG: Print LoRA parameter gradients after backward ---
+            print("LoRA parameter gradients (after backward):")
+            for name, param in medsam_model.image_encoder.named_parameters():
+                if param.requires_grad and param.grad is not None:
+                    print(f"{name}: grad norm = {param.grad.norm().item()}")
+
+            # Compute grad norm for all trainable params (LoRA only)
+            total_norm = 0.0
+            for name, param in medsam_model.image_encoder.named_parameters():
+                if param.requires_grad and param.grad is not None:
+                    param_norm = param.grad.data.norm(2).item()
+                    total_norm += param_norm ** 2
+            grad_norm = total_norm ** 0.5
+
+            if device.type == 'cuda':
                 scaler.step(optimizer)
                 scaler.update()
             else:
-                loss.backward()
                 optimizer.step()
-            optimizer.zero_grad()
-            # Compute grad norm before optimizer step
-            total_norm = 0.0
-            for p in medsam_model.parameters():
-                if p.grad is not None:
-                    param_norm = p.grad.data.norm(2).item()
-                    total_norm += param_norm ** 2
-            grad_norm = total_norm ** 0.5
+
             epoch_loss += loss.item()
             iter_num += 1
         epoch_loss /= step
