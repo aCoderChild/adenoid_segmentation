@@ -170,6 +170,12 @@ def main():
     ).to(device)
     medsam_model.train()
 
+    # --- DEBUG: Print trainable parameters (should be LoRA only) ---
+    print("Trainable parameters (should be LoRA only):")
+    for name, param in medsam_model.image_encoder.named_parameters():
+        if param.requires_grad:
+            print(name, param.shape)
+
     # Warn if MPS requested but not available
     if config.get("device", "cuda:0").startswith("mps") and not torch.backends.mps.is_available():
         print("Warning: MPS device requested but not available. Using CPU instead.")
