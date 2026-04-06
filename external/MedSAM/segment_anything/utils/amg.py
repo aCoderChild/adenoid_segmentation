@@ -93,10 +93,11 @@ def box_xyxy_to_xywh(box_xyxy: torch.Tensor) -> torch.Tensor:
     box_xywh = deepcopy(box_xyxy)
     box_xywh[2] = box_xywh[2] - box_xywh[0]
     box_xywh[3] = box_xywh[3] - box_xywh[1]
-    return box_xywh
+    return box_xywh # return: top-left cornet + width + height
 
 
 def batch_iterator(batch_size: int, *args) -> Generator[List[Any], None, None]:
+    # yield batches of data from multiple input lists in parallel
     assert len(args) > 0 and all(
         len(a) == len(args[0]) for a in args
     ), "Batched iteration must have inputs of all the same size."
@@ -151,6 +152,7 @@ def rle_to_mask(rle: Dict[str, Any]) -> np.ndarray:
 
 
 def area_from_rle(rle: Dict[str, Any]) -> int:
+    # total number of pixels in the mask (mask pixels set 1)
     return sum(rle["counts"][1::2])
 
 
@@ -161,6 +163,21 @@ def calculate_stability_score(
     Computes the stability score for a batch of masks. The stability
     score is the IoU between the binary masks obtained by thresholding
     the predicted mask logits at high and low values.
+
+    measures how stable a predicted mask is to small changes in the threshold
+    creates 2 binary masks for each input mask:
+    - high threshold: mask_threshold + threshold_offset
+    - low threshold: mask_threshold - threshold_offset
+
+    Args:
+    - mask logits (not binary masks)
+    - threshold
+    - threshold offset
+
+    Returns:
+    - ratio: intersection/union (IoU)
+    - intersection: high threshold
+    - union: low threshold
     """
     # One mask is always contained inside the other.
     # Save memory by preventing unnecessary cast to torch.int64
@@ -188,7 +205,7 @@ def build_point_grid(n_per_side: int) -> np.ndarray:
 
 
 def build_all_layer_point_grids(
-    n_per_side: int, n_layers: int, scale_per_layer: int
+    n_per_side: int, n_layers: int, scale_per_layer: int # scale per layer: 2 (usually)
 ) -> List[np.ndarray]:
     """Generates point grids for all crop layers."""
     points_by_layer = []
@@ -210,10 +227,13 @@ def generate_crop_boxes(
     short_side = min(im_h, im_w)
 
     # Original image
-    crop_boxes.append([0, 0, im_w, im_h])
+    crop_boxes.append([0, 0, im_w, im_h]) # xywh format
     layer_idxs.append(0)
 
     def crop_len(orig_len, n_crops, overlap):
+        # minimum crop size needed so n_crops overlapping crops will fully cover the original length
+        # ensure the entire length is covered
+        # each crop overlaps with its neighbour by overlap units
         return int(math.ceil((overlap * (n_crops - 1) + orig_len) / n_crops))
 
     for i_layer in range(n_layers):
@@ -236,6 +256,8 @@ def generate_crop_boxes(
 
 
 def uncrop_boxes_xyxy(boxes: torch.Tensor, crop_box: List[int]) -> torch.Tensor:
+    # convert bounding box from crop-relative coordinates
+    # back to image-relative coordinates
     x0, y0, _, _ = crop_box
     offset = torch.tensor([[x0, y0, x0, y0]], device=boxes.device)
     # Check if boxes has a channel dimension
@@ -293,12 +315,27 @@ def remove_small_regions(
 
 
 def coco_encode_rle(uncompressed_rle: Dict[str, Any]) -> Dict[str, Any]:
+    # converts an uncompressed RLE mask into the compressed format
+    # used by COCO dataset
+
+    """
+    COCO format: data format for object detection, segmentation, keypoint tasks
+    defined by COCO dataset
+    For segmentation masks, COCO uses Run-length encoding (RLE) to store masks
+
+    Images + annotation: JSON file
+    annotation = image_id, category_id, bbox, segmentation (list of polygons, RLE dictionary)
+
+    Run length encoding: instead of storing every pixel, RLE stores the lengths of 
+    consecutive runs of 0s and 1s
+    ex: [0,0,0,1,1,0,0,1] => [3 (0s), 2 (1s), 2 (0s), 1 (1s)]
+    """
     from pycocotools import mask as mask_utils  # type: ignore
 
     h, w = uncompressed_rle["size"]
     rle = mask_utils.frPyObjects(uncompressed_rle, h, w)
     rle["counts"] = rle["counts"].decode("utf-8")  # Necessary to serialize with json
-    return rle
+    return rle # encode segmentation mask
 
 
 def batched_mask_to_box(masks: torch.Tensor) -> torch.Tensor:

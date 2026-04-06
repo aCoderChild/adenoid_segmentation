@@ -15,8 +15,9 @@ with open(CONFIG_PATH, 'r') as f:
 VAL_IMG = config.get('VAL_IMG', 'data/segmentation/val_data/images')
 VAL_MASK = config.get('VAL_MASK', 'data/segmentation/val_data/masks')
 CHECKPOINT = config.get('FINETUNE_CHECKPOINT')
-RESULTS_DIR = config.get('RESULTS_DIR_AUTO', 'external/MedSAM/results/auto')
+RESULTS_DIR = config.get('RESULTS_DIR_AUTO_AFTER_FINETUNED', 'external/MedSAM/results/auto/finetune_checkpoint_encoder')
 VIS_DIR = os.path.join(RESULTS_DIR, config.get('VIS_SUBDIR', 'vis'))
+NO_MASK_DIR = os.path.join(RESULTS_DIR, config.get('NO_MASK_SUBDIR', 'no_masks'))
 METRICS_DIR = os.path.join(RESULTS_DIR, config.get('METRICS_SUBDIR', 'metrics'))
 PER_SAMPLE_CSV = os.path.join(METRICS_DIR, config.get('PER_SAMPLE_CSV', 'per_sample.csv'))
 AVG_CSV = os.path.join(METRICS_DIR, config.get('AVG_CSV', 'avg.csv'))
@@ -37,12 +38,12 @@ def load_medsam_model(checkpoint_path, device):
         raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
     ckpt = torch.load(checkpoint_path, map_location="cpu")
     medsam_model = sam_model_registry["vit_b"](checkpoint="work_dir/MedSAM/medsam_vit_b.pth")
-    # Re-init prompt encoder for 256x256
+    # Re-init prompt encoder for 1024x1024 input
     prompt_embed_dim = 256
     medsam_model.prompt_encoder = PromptEncoder(
         embed_dim=prompt_embed_dim,
-        image_embedding_size=(16, 16),
-        input_image_size=(256, 256),
+        image_embedding_size=(64, 64),  # 1024 / 16=64 - ViT
+        input_image_size=(1024, 1024),
         mask_in_chans=16,
     )
     medsam_model.image_encoder = apply_lora_to_vit_encoder(medsam_model.image_encoder, r=8, alpha=16)
@@ -87,7 +88,7 @@ def main():
     from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
     mask_generator = SamAutomaticMaskGenerator(
         medsam_model,
-        points_per_side=16,
+        points_per_side=32,
         pred_iou_thresh=0.5,
         stability_score_thresh=0.5,
         min_mask_region_area=0,
@@ -96,32 +97,42 @@ def main():
     results = []
     img_names = sorted(os.listdir(VAL_IMG))
     print(f"Found {len(img_names)} images in {VAL_IMG}")
+    os.makedirs(NO_MASK_DIR, exist_ok=True)
     for img_name in tqdm(img_names):
         base = os.path.splitext(img_name)[0]
         img_path = os.path.join(VAL_IMG, img_name)
         mask_path = os.path.join(VAL_MASK, base + '.jpg')
         if not os.path.exists(mask_path):
-            print(f"Skipping {img_name}: mask not found. Mask: {mask_path}")
+            print(f"No mask file found for {img_name}")
+            os.rename(img_path, os.path.join(NO_MASK_DIR, img_name))
+            continue
+        mask = io.imread(mask_path)
+        if mask.max() == 0:
+            print(f"No mask (all zeros) for {img_name}")
+            os.rename(img_path, os.path.join(NO_MASK_DIR, img_name))
             continue
         img_np = io.imread(img_path)
         if len(img_np.shape) == 2:
             img_3c = np.repeat(img_np[:, :, None], 3, axis=-1)
         else:
             img_3c = img_np
-        img_3c = transform.resize(img_3c, (256, 256), order=3, preserve_range=True, anti_aliasing=True).astype(np.float32)
+        img_3c = transform.resize(img_3c, (1024, 1024), order=3, preserve_range=True, anti_aliasing=True).astype(np.float32)
         H, W, _ = img_3c.shape
         debug_img_path = os.path.join(VIS_DIR, f'{base}_input_debug.jpg')
         io.imsave(debug_img_path, np.clip(img_3c, 0, 255).astype(np.uint8))
         print(f"{img_name}: min={img_3c.min()}, max={img_3c.max()}, mean={img_3c.mean()}, shape={img_3c.shape}")
-        # Use SamAutomaticMaskGenerator for mask prediction
         masks = mask_generator.generate(img_3c)
         if len(masks) == 0:
             print(f"No masks found for {img_name}")
+            os.rename(img_path, os.path.join(NO_MASK_DIR, img_name))
             continue
         main_mask = max(masks, key=lambda m: m['area'])['segmentation']
         mask_save_path = os.path.join(MASK_OUT_DIR, base + '.jpg')
         io.imsave(mask_save_path, (main_mask * 255).astype(np.uint8))
         gt_mask = io.imread(mask_path)
+        if gt_mask.shape != (1024, 1024):
+            from skimage.transform import resize
+            gt_mask = resize(gt_mask, (1024, 1024), order=0, preserve_range=True, anti_aliasing=False).astype(gt_mask.dtype)
         if gt_mask.max() > 1:
             gt_mask = (gt_mask > 0).astype(np.uint8)
         vis1 = overlay_mask(img_3c/255.0, gt_mask, [0,1,0], 0.5)

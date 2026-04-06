@@ -14,20 +14,21 @@ from typing import Any, Dict, List, Optional, Tuple
 from .modeling import Sam
 from .predictor import SamPredictor
 from .utils.amg import (
-    MaskData,
-    area_from_rle,
+    MaskData, # masks and related data in bach format for processing
+    area_from_rle, # mask coverage (label 1 pixels)
     batch_iterator,
-    batched_mask_to_box,
+    batched_mask_to_box, # calculate boxes around masks
     box_xyxy_to_xywh,
-    build_all_layer_point_grids,
-    calculate_stability_score,
-    coco_encode_rle,
-    generate_crop_boxes,
-    is_box_near_crop_edge,
+    build_all_layer_point_grids, # generate point grids, ex:[16, 8, 4, 2, 1]
+    calculate_stability_score, # IoU score
+    coco_encode_rle, # convert segmentation masks to RLE COCO format
+    generate_crop_boxes, # allow the mask generator to process different parts of the image at multiple scales with overlaps
+    # avoid duplicate / partial detections when processing overlapping crops
+    is_box_near_crop_edge, # filter boxes that are at the boundary of a crop but not the boundary of the full image (incomplete)
     mask_to_rle_pytorch,
-    remove_small_regions,
+    remove_small_regions, # remove the small disconected regions and holes in a mask
     rle_to_mask,
-    uncrop_boxes_xyxy,
+    uncrop_boxes_xyxy, # convert from crop-relative back to image-relative
     uncrop_masks,
     uncrop_points,
 )
@@ -38,17 +39,17 @@ class SamAutomaticMaskGenerator:
         self,
         model: Sam,
         points_per_side: Optional[int] = 32,
-        points_per_batch: int = 64,
+        points_per_batch: int = 64, # number of points prompts processed simultaneously by the model in each batch
         pred_iou_thresh: float = 0.88,
-        stability_score_thresh: float = 0.95,
+        stability_score_thresh: float = 0.95, # minimum stability score required for a mask (filter unstable masks)
         stability_score_offset: float = 1.0,
-        box_nms_thresh: float = 0.7,
+        box_nms_thresh: float = 0.7, # IoU threshold for non-maximum suppression (NMS) - filter out duplicate masks within same crop
         crop_n_layers: int = 0,
-        crop_nms_thresh: float = 0.7,
-        crop_overlap_ratio: float = 512 / 1500,
+        crop_nms_thresh: float = 0.7, # NMS for different crops
+        crop_overlap_ratio: float = 512 / 1500, # fraction of the image length that crops overal in the FIRST crop layer
         crop_n_points_downscale_factor: int = 1,
-        point_grids: Optional[List[np.ndarray]] = None,
-        min_mask_region_area: int = 0,
+        point_grids: Optional[List[np.ndarray]] = None, # list of point grids for sampling mask prompts
+        min_mask_region_area: int = 0, # minimum area for mask regions - smaller regions are removed as postprocessing
         output_mode: str = "binary_mask",
     ) -> None:
         """
@@ -78,7 +79,8 @@ class SamAutomaticMaskGenerator:
             crops of the image. Sets the number of layers to run, where each
             layer has 2**i_layer number of image crops.
           crop_nms_thresh (float): The box IoU cutoff used by non-maximal
-            suppression to filter duplicate masks between different crops.
+            suppression to filter duplicate masks between different crops by keeping 
+            only the highest score in overlapping regions.
           crop_overlap_ratio (float): Sets the degree to which crops overlap.
             In the first crop layer, crops will overlap by this fraction of
             the image length. Later layers with more crops scale down this overlap.
@@ -96,6 +98,7 @@ class SamAutomaticMaskGenerator:
             memory.
         """
 
+        # ensure only one of points_per_side or point_grids is provided
         assert (points_per_side is None) != (
             point_grids is None
         ), "Exactly one of points_per_side or point_grid must be provided."
@@ -110,6 +113,7 @@ class SamAutomaticMaskGenerator:
         else:
             raise ValueError("Can't have both points_per_side and point_grid be None.")
 
+        # check output_mode is valid
         assert output_mode in [
             "binary_mask",
             "uncompressed_rle",
@@ -184,14 +188,15 @@ class SamAutomaticMaskGenerator:
         # Write mask records
         curr_anns = []
         for idx in range(len(mask_data["segmentations"])):
+            # output annotations
             ann = {
                 "segmentation": mask_data["segmentations"][idx],
-                "area": area_from_rle(mask_data["rles"][idx]),
+                "area": area_from_rle(mask_data["rles"][idx]), # number of pixels covered by the masks from RLE
                 "bbox": box_xyxy_to_xywh(mask_data["boxes"][idx]).tolist(),
                 "predicted_iou": mask_data["iou_preds"][idx].item(),
                 "point_coords": [mask_data["points"][idx].tolist()],
                 "stability_score": mask_data["stability_score"][idx].item(),
-                "crop_box": box_xyxy_to_xywh(mask_data["crop_boxes"][idx]).tolist(),
+                "crop_box": box_xyxy_to_xywh(mask_data["crop_boxes"][idx]).tolist(), # crop region of the image used to generate mask
             }
             curr_anns.append(ann)
 
@@ -236,21 +241,22 @@ class SamAutomaticMaskGenerator:
         x0, y0, x1, y1 = crop_box
         cropped_im = image[y0:y1, x0:x1, :]
         cropped_im_size = cropped_im.shape[:2]
-        self.predictor.set_image(cropped_im)
+        # prepare the SAM model to process the cropped image
+        self.predictor.set_image(cropped_im) # extract region defined by crop_box
 
         # Get points for this crop
         points_scale = np.array(cropped_im_size)[None, ::-1]
-        points_for_image = self.point_grids[crop_layer_idx] * points_scale
+        points_for_image = self.point_grids[crop_layer_idx] * points_scale # coordinates where the model will predict masks
 
         # Generate masks for this crop in batches
         data = MaskData()
         for (points,) in batch_iterator(self.points_per_batch, points_for_image):
-            batch_data = self._process_batch(
+            batch_data = self._process_batch( # generate masks and related data
                 points, cropped_im_size, crop_box, orig_size
             )
             data.cat(batch_data)
             del batch_data
-        self.predictor.reset_image()
+        self.predictor.reset_image() # reset state after processing crop
 
         # Remove duplicates within this crop.
         keep_by_nms = batched_nms(
@@ -266,7 +272,7 @@ class SamAutomaticMaskGenerator:
         data["points"] = uncrop_points(data["points"], crop_box)
         data["crop_boxes"] = torch.tensor([crop_box for _ in range(len(data["rles"]))])
 
-        return data
+        return data # MaskData object - all masks and metadata for a crop, referenced to the original image
 
     def _process_batch(
         self,
@@ -278,12 +284,13 @@ class SamAutomaticMaskGenerator:
         orig_h, orig_w = orig_size
 
         # Run model on this batch
-        transformed_points = self.predictor.transform.apply_coords(points, im_size)
+        # SAM model predictor
+        transformed_points = self.predictor.transform.apply_coords(points, im_size) # transform the point coordinatees from the image's pixel space to coordinate system expected by the SAM model
         in_points = torch.as_tensor(transformed_points, dtype=torch.float32, device=self.predictor.device)
         in_labels = torch.ones(
             in_points.shape[0], dtype=torch.int, device=in_points.device
         )
-        masks, iou_preds, _ = self.predictor.predict_torch(
+        masks, iou_preds, _ = self.predictor.predict_torch( # mask prediction using SAM model
             in_points[:, None, :],
             in_labels[:, None],
             multimask_output=True,
@@ -291,9 +298,10 @@ class SamAutomaticMaskGenerator:
         )
 
         # Serialize predictions and store in MaskData
+        # serialize: organize and store
         data = MaskData(
-            masks=masks.flatten(0, 1),
-            iou_preds=iou_preds.flatten(0, 1),
+            masks=masks.flatten(0, 1), # flatten mask tensor => all predicted masks in a single dimension
+            iou_preds=iou_preds.flatten(0, 1), # flatten the predicted IoU scores to match the flattened masks
             points=torch.as_tensor(points.repeat(masks.shape[1], axis=0)),
         )
         del masks

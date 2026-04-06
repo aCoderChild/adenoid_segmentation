@@ -7,12 +7,9 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
 import numpy as np
-import random
-import matplotlib.pyplot as plt
 from tqdm import tqdm
 from datetime import datetime
 import shutil
-import glob
 import wandb
 import monai
 from segment_anything import sam_model_registry
@@ -86,19 +83,11 @@ class MedSAM(nn.Module):
         return ori_res_masks
 
 def main():
-    # Load config
+    # 1. Load config
     with open("external/MedSAM/config/finetune.yaml", "r") as f:
         config = yaml.safe_load(f)
 
-    # wandb disabled
-    # wandb.init(
-    #     project="MedSAM_finetune_encoder",
-    #     entity="adenoid-hypertrophy",
-    #     name=f"finetune-MedSAM-{datetime.now().strftime('%Y%m%d-%H%M')}",
-    #     config=config
-    # )
-
-    # Set device, supporting MPS (Apple Silicon)
+    # 2. Set device
     requested_device = config.get("device", "cuda:0")
     if requested_device.startswith("mps") and torch.backends.mps.is_available():
         device = torch.device("mps")
@@ -113,16 +102,18 @@ def main():
     if device.type == "cuda":
         torch.cuda.empty_cache()
 
-    # Prepare output dir
+    # output dir
     run_id = datetime.now().strftime("%Y%m%d-%H%M")
     model_save_path = os.path.join(config["work_dir"], f"MedSAM-ViT-B-{run_id}")
     os.makedirs(model_save_path, exist_ok=True)
     shutil.copyfile(__file__, os.path.join(model_save_path, run_id + "_finetune_medsam_lora.py"))
 
+
     # Load model
     sam_model = sam_model_registry[config["model_type"]](checkpoint=config["checkpoint"])
 
-    # Re-initialize prompt encoder for 1024x1024 images (patch size 16, 64x64 embedding)
+    # prompt encoder for 1024x1024 images (patch size 16, 64x64 embedding)
+    # TODO: read class PromptEncoder again
     from segment_anything.modeling.prompt_encoder import PromptEncoder
     prompt_embed_dim = 256
     sam_model.prompt_encoder = PromptEncoder(
@@ -132,14 +123,14 @@ def main():
         mask_in_chans=16,
     )
 
-    # Apply LoRA for MedSAM ViT encoder if requested
+    # Apply LoRA for MedSAM ViT encoder
     if config.get("use_lora", False):
         r = config.get("lora_r", 8)
         lora_alpha = config.get("lora_alpha", 16)
-        sam_model.image_encoder = apply_lora_to_vit_encoder(sam_model.image_encoder, r, lora_alpha)
+        sam_model.image_encoder = apply_lora_to_vit_encoder(sam_model.image_encoder, r, lora_alpha) # finetune only the image encoder
         print("LoRA applied to MedSAM ViT encoder (qkv, proj)")
 
-    # Freeze all parameters except LoRA
+    # Freeze all parameters except LoRA (for computation)
     for name, param in sam_model.image_encoder.named_parameters():
         if 'lora_A' in name or 'lora_B' in name:
             param.requires_grad = True
@@ -150,11 +141,11 @@ def main():
     for param in sam_model.prompt_encoder.parameters():
         param.requires_grad = False
 
-    # Move all submodules to device
     sam_model.image_encoder = sam_model.image_encoder.to(device)
     sam_model.mask_decoder = sam_model.mask_decoder.to(device)
     sam_model.prompt_encoder = sam_model.prompt_encoder.to(device)
 
+    # MedSAM wrapper
     medsam_model = MedSAM(
         image_encoder=sam_model.image_encoder,
         mask_decoder=sam_model.mask_decoder,
@@ -162,93 +153,8 @@ def main():
     ).to(device)
     medsam_model.train()
 
-    # --- DEBUG: Print trainable parameters (should be LoRA only) ---
-    print("Trainable parameters (should be LoRA only):")
-    found_trainable = False
-    for name, param in medsam_model.image_encoder.named_parameters():
-        if param.requires_grad:
-            print(name, param.shape)
-            found_trainable = True
-    if not found_trainable:
-        print("[WARNING] No trainable LoRA parameters found! Check LoRA application and freezing logic.")
-    
-    # Load config
-    with open("external/MedSAM/config/finetune.yaml", "r") as f:
-        config = yaml.safe_load(f)
 
-    # wandb disabled
-    # wandb.init(
-    #     project="MedSAM_finetune_encoder",
-    #     entity="adenoid-hypertrophy",
-    #     name=f"finetune-MedSAM-{datetime.now().strftime('%Y%m%d-%H%M')}",
-    #     config=config
-    # )
-
-    # Set device, supporting MPS (Apple Silicon)
-    requested_device = config.get("device", "cuda:0")
-    if requested_device.startswith("mps") and torch.backends.mps.is_available():
-        device = torch.device("mps")
-        print("Using MPS device.")
-    elif requested_device.startswith("cuda") and torch.cuda.is_available():
-        device = torch.device(requested_device)
-        print(f"Using CUDA device: {requested_device}")
-    else:
-        device = torch.device("cpu")
-        print("Using CPU device.")
-    torch.manual_seed(2023)
-    if device.type == "cuda":
-        torch.cuda.empty_cache()
-
-    # Prepare output dir
-    run_id = datetime.now().strftime("%Y%m%d-%H%M")
-    model_save_path = os.path.join(config["work_dir"], f"MedSAM-ViT-B-{run_id}")
-    os.makedirs(model_save_path, exist_ok=True)
-    shutil.copyfile(__file__, os.path.join(model_save_path, run_id + "_finetune_medsam_lora.py"))
-
-    # Load model
-    sam_model = sam_model_registry[config["model_type"]](checkpoint=config["checkpoint"])
-
-    # Re-initialize prompt encoder for 1024x1024 images (patch size 16, 64x64 embedding)
-    from segment_anything.modeling.prompt_encoder import PromptEncoder
-    prompt_embed_dim = 256
-    sam_model.prompt_encoder = PromptEncoder(
-        embed_dim=prompt_embed_dim,
-        image_embedding_size=(64, 64),
-        input_image_size=(1024, 1024),
-        mask_in_chans=16,
-    )
-
-    # Apply LoRA for MedSAM ViT encoder if requested
-    if config.get("use_lora", False):
-        r = config.get("lora_r", 8)
-        lora_alpha = config.get("lora_alpha", 16)
-        sam_model.image_encoder = apply_lora_to_vit_encoder(sam_model.image_encoder, r, lora_alpha)
-        print("LoRA applied to MedSAM ViT encoder (qkv, proj)")
-
-    # Freeze all parameters except LoRA
-    for name, param in sam_model.image_encoder.named_parameters():
-        if 'lora_A' in name or 'lora_B' in name:
-            param.requires_grad = True
-        else:
-            param.requires_grad = False
-    for param in sam_model.mask_decoder.parameters():
-        param.requires_grad = False
-    for param in sam_model.prompt_encoder.parameters():
-        param.requires_grad = False
-
-    # Move all submodules to device
-    sam_model.image_encoder = sam_model.image_encoder.to(device)
-    sam_model.mask_decoder = sam_model.mask_decoder.to(device)
-    sam_model.prompt_encoder = sam_model.prompt_encoder.to(device)
-
-    medsam_model = MedSAM(
-        image_encoder=sam_model.image_encoder,
-        mask_decoder=sam_model.mask_decoder,
-        prompt_encoder=sam_model.prompt_encoder,
-    ).to(device)
-    medsam_model.train()
-
-    # Warn if MPS requested but not available
+    # device
     if config.get("device", "cuda:0").startswith("mps") and not torch.backends.mps.is_available():
         print("Warning: MPS device requested but not available. Using CPU instead.")
 
@@ -265,7 +171,7 @@ def main():
     ce_loss = nn.BCEWithLogitsLoss(reduction="mean")
 
 
-    # Dataset: expects images/ and masks/ subfolders in tr_npy_path
+    # prepare dataset
     train_dataset = ImageMaskDataset(
         os.path.join(config["train_data_path"], "images"),
         os.path.join(config["train_data_path"], "masks"),
@@ -334,13 +240,14 @@ def main():
         print(f"Time: {datetime.now().strftime('%Y%m%d-%H%M')}, Epoch: {epoch}, Loss: {epoch_loss}, GradNorm: {grad_norm}, LR: {current_lr}")
         if last_lora_name is not None:
             print(f"Last LoRA grad norm after epoch: {last_lora_name}: grad norm = {last_lora_grad}")
-        # wandb.log disabled
-        # wandb.log({
-        #     "epoch": epoch,
-        #     "loss": epoch_loss,
-        #     "learning_rate": current_lr,
-        #     "grad_norm": grad_norm
-        # })
+        # wandb.log enabled 
+        wandb.log({
+            "epoch": epoch,
+            "loss": epoch_loss,
+            "learning_rate": current_lr,
+            "grad_norm": grad_norm
+        })
+
         # Save latest model
         checkpoint = {
             "model": medsam_model.state_dict(),
@@ -348,7 +255,9 @@ def main():
             "epoch": epoch,
         }
         torch.save(checkpoint, os.path.join(model_save_path, "medsam_model_latest.pth"))
-        # Save best model
+
+        # Save best model (according to loss in training)
+        # TODO: save best according to the val dataset (split train : val), not training
         if epoch_loss < best_loss:
             best_loss = epoch_loss
             torch.save(checkpoint, os.path.join(model_save_path, "medsam_model_best.pth"))

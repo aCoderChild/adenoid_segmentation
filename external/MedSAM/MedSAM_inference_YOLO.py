@@ -27,7 +27,6 @@ METRICS_DIR = os.path.join(RESULTS_DIR, config['METRICS_SUBDIR'])
 PER_SAMPLE_CSV = os.path.join(METRICS_DIR, config['PER_SAMPLE_CSV'])
 AVG_CSV = os.path.join(METRICS_DIR, config['AVG_CSV'])
 
-
 # Load metrics from utils/metrics.py
 METRICS_PATH = os.path.join(os.path.dirname(__file__), 'utils')
 if METRICS_PATH not in sys.path:
@@ -36,7 +35,6 @@ import utils.metrics as medsam_metrics
 os.makedirs(CSV_OUT_DIR, exist_ok=True)
 os.makedirs(VIS_DIR, exist_ok=True)
 os.makedirs(METRICS_DIR, exist_ok=True)
-
 
 def convert_txt_to_csv(txt_path, csv_path, img_width, img_height, class_mapping=None):
     """

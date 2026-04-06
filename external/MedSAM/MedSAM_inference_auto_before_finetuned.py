@@ -15,8 +15,9 @@ with open(CONFIG_PATH, 'r') as f:
 VAL_IMG = config.get('VAL_IMG', 'data/segmentation/val_data/images')
 VAL_MASK = config.get('VAL_MASK', 'data/segmentation/val_data/masks')
 CHECKPOINT = config.get('CHECKPOINT')
-RESULTS_DIR = config.get('RESULTS_DIR_AUTO', 'external/MedSAM/results/auto')
+RESULTS_DIR = config.get('RESULTS_DIR_AUTO_BEFORE_FINETUNED', 'results/auto/original_checkpoint_encoder')
 VIS_DIR = os.path.join(RESULTS_DIR, config.get('VIS_SUBDIR', 'vis'))
+NO_MASK_DIR = os.path.join(RESULTS_DIR, config.get('NO_MASK_SUBDIR', 'no_masks'))
 METRICS_DIR = os.path.join(RESULTS_DIR, config.get('METRICS_SUBDIR', 'metrics'))
 PER_SAMPLE_CSV = os.path.join(METRICS_DIR, config.get('PER_SAMPLE_CSV', 'per_sample.csv'))
 AVG_CSV = os.path.join(METRICS_DIR, config.get('AVG_CSV', 'avg.csv'))
@@ -29,7 +30,6 @@ os.makedirs(MASK_OUT_DIR, exist_ok=True)
 # Load MedSAM model and automatic mask generator
 from segment_anything.build_sam import sam_model_registry
 from segment_anything.modeling.prompt_encoder import PromptEncoder
-from utils.lora_medsam import apply_lora_to_vit_encoder
 from segment_anything.automatic_mask_generator import SamAutomaticMaskGenerator
 
 def load_medsam_model(checkpoint_path, device):
@@ -39,7 +39,6 @@ def load_medsam_model(checkpoint_path, device):
     if not os.path.isfile(checkpoint_path):
         raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
     checkpoint = torch.load(checkpoint_path, map_location=device)
-    # Only accept pure state_dict (no 'model' key)
     if isinstance(checkpoint, dict) and 'model' in checkpoint:
         raise ValueError(f"Checkpoint {checkpoint_path} should be a state_dict, not a dict with 'model' key. Please provide the correct .pth file.")
     medsam_model = sam_model_registry["vit_b"](checkpoint="work_dir/MedSAM/medsam_vit_b.pth")
@@ -82,21 +81,29 @@ def main():
     medsam_model = load_medsam_model(CHECKPOINT, device)
     mask_generator = SamAutomaticMaskGenerator(
         medsam_model,
-        points_per_side=16,  # lower for speed
-        pred_iou_thresh=0.5,  # lower for more masks
-        stability_score_thresh=0.5,  # lower for more masks
+        points_per_side=32, # default
+        pred_iou_thresh=0.5,  # default: 0.88
+        stability_score_thresh=0.5,  # default: 0.95
         min_mask_region_area=0,
     )
 
     results = []
     img_names = sorted(os.listdir(VAL_IMG))
     print(f"Found {len(img_names)} images in {VAL_IMG}")
+    os.makedirs(NO_MASK_DIR, exist_ok=True)
     for img_name in tqdm(img_names):
         base = os.path.splitext(img_name)[0]
         img_path = os.path.join(VAL_IMG, img_name)
         mask_path = os.path.join(VAL_MASK, base + '.jpg')
         if not os.path.exists(mask_path):
-            print(f"Skipping {img_name}: mask not found. Mask: {mask_path}")
+            print(f"No mask file found for {img_name}")
+            # Move image to no-mask folder
+            os.rename(img_path, os.path.join(NO_MASK_DIR, img_name))
+            continue
+        mask = io.imread(mask_path)
+        if mask.max() == 0:
+            print(f"No mask (all zeros) for {img_name}")
+            os.rename(img_path, os.path.join(NO_MASK_DIR, img_name))
             continue
         # Read image
         img_np = io.imread(img_path)
@@ -107,9 +114,6 @@ def main():
         # Ensure float32 for MPS compatibility
         img_3c = img_3c.astype(np.float32)
         H, W, _ = img_3c.shape
-        # Save input image for debugging
-        debug_img_path = os.path.join(VIS_DIR, f'{base}_input_debug.jpg')
-        io.imsave(debug_img_path, np.clip(img_3c, 0, 255).astype(np.uint8))
         # Print image statistics for debugging
         print(f"{img_name}: min={img_3c.min()}, max={img_3c.max()}, mean={img_3c.mean()}, shape={img_3c.shape}")
         # Run automatic mask generator
@@ -117,6 +121,7 @@ def main():
         # Take the largest mask (by area) as the main prediction
         if len(masks) == 0:
             print(f"No masks found for {img_name}")
+            os.rename(img_path, os.path.join(NO_MASK_DIR, img_name))
             continue
         main_mask = max(masks, key=lambda m: m['area'])['segmentation']
         # Save mask
